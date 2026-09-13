@@ -1,20 +1,19 @@
 # wgcf
 > wgcf is an unofficial, cross-platform CLI for [Cloudflare Warp](https://1.1.1.1/)
 
-![](https://img.shields.io/drone/build/ViRb3/wgcf)
-![](https://img.shields.io/github/issues/ViRb3/wgcf)
-![](https://img.shields.io/github/downloads/ViRb3/wgcf/total)
-![](https://img.shields.io/github/languages/code-size/ViRb3/wgcf)
+![](https://img.shields.io/github/issues/DeFeNske/awgcf)
+![](https://img.shields.io/github/downloads/DeFeNske/awgcf/total)
+![](https://img.shields.io/github/languages/code-size/DeFeNske/awgcf)
 
 ## Features
 - Register new account
 - Change license key to use existing Warp+ subscription
-- Generate WireGuard profile
+- Generate AmneziaWG profile
 - Check account status
 - Print trace information to debug Warp/Warp+ status
 
 ## Download
-You can find pre-compiled binaries on the [releases page](https://github.com/ViRb3/wgcf/releases).
+You can find pre-compiled binaries on the [releases page](https://github.com/DeFeNske/awgcf/releases).
 
 ## Usage
 Run `wgcf` in a terminal without any arguments to display the help screen. All commands and parameters are documented.
@@ -26,15 +25,20 @@ wgcf register
 ```
 The new account will be saved under `wgcf-account.toml`
 
-### Generate WireGuard profile
+### Generate AmneziaWG profile
 Run the following command in a terminal:
 ```bash
 wgcf generate
 ```
-The WireGuard profile will be saved under `wgcf-profile.conf`. For more information on how to use it, please check the official [WireGuard Quick Start](https://www.wireguard.com/quickstart/).
+The AmneziaWG profile will be saved under `awgcf-profile.conf`.
+
+### Generate AmneziaWG 3.0/3.1 profile
+```bash
+wgcf generate awg3/awg3.1
+```
 
 #### Maximum transmission unit (MTU)
-To ensure maximum compatibility, the generated profile will have a MTU of 1280, just like the official Android app. If you are experiencing performance issues, you may be able to improve your speed by increasing this value. For more information, please check [#40](https://github.com/ViRb3/wgcf/issues/40).
+To ensure maximum compatibility, the generated profile will have a MTU of 1420. If you are experiencing performance issues, you may be able to improve your speed by increasing this value. For more information, please check [#40](https://github.com/ViRb3/wgcf/issues/40).
 
 ### Add a license key
 
