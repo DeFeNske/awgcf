@@ -3,14 +3,6 @@ name: Release
 on:
   workflow_dispatch:
 
-  workflow_run:
-    workflows:
-      - Test
-    types:
-      - completed
-    branches:
-      - master
-
 permissions:
   contents: read
 
@@ -20,13 +12,6 @@ concurrency:
 
 jobs:
   release-please:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event.workflow_run.conclusion == 'success' &&
-        github.event.workflow_run.event == 'push' &&
-        github.event.workflow_run.head_branch == 'master'
-      )
     runs-on: ubuntu-24.04
 
     permissions:
