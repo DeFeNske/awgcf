@@ -14,7 +14,7 @@ func TestGenerateProfileAWG(t *testing.T) {
 		Endpoint:   "5",
 		Amnezia: &AmneziaConfig{
 			Version: AWG2,
-			Jc: 4, Jmin: 40, Jmax: 70,
+			Jc:      4, Jmin: 40, Jmax: 70,
 			S1: 0, S2: 0, S3: 0, S4: 0,
 			H1: "1", H2: "2", H3: "3", H4: "4",
 			I1: "<r 32>",

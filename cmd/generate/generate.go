@@ -14,6 +14,8 @@ import (
 
 var profileFile string
 var awgConfigFile string
+var endpoint string
+var mtu int
 
 var shortMsg = "Generates an AmneziaWG profile from the current Cloudflare Warp account"
 
@@ -22,29 +24,64 @@ var Cmd = &cobra.Command{
 	Short: shortMsg,
 	Long:  FormatMessage(shortMsg, ``),
 	Args:  cobra.MaximumNArgs(1),
+
 	Run: func(cmd *cobra.Command, args []string) {
 		RunCommandFatal(func() error {
 			version := wireguard.AWG2
+
 			if len(args) == 1 {
 				switch args[0] {
 				case "awg2":
 					version = wireguard.AWG2
+
 				case "awg3":
 					version = wireguard.AWG3
+
 				case "awg3.1":
 					version = wireguard.AWG31
+
 				default:
-					return errors.Errorf("unknown protocol %q; use awg2, awg3 or awg3.1", args[0])
+					return errors.Errorf(
+						"unknown protocol %q; use awg2, awg3 or awg3.1",
+						args[0],
+					)
 				}
 			}
+
 			return generateProfile(version)
 		})
 	},
 }
 
 func init() {
-	Cmd.PersistentFlags().StringVarP(&profileFile, "profile", "p", "awgcf-profile.conf", "AmneziaWG profile file")
-	Cmd.PersistentFlags().StringVar(&awgConfigFile, "config", "", "custom AmneziaWG JSON configuration")
+	Cmd.PersistentFlags().StringVarP(
+		&profileFile,
+		"profile",
+		"p",
+		"awgcf-profile.conf",
+		"AmneziaWG profile file",
+	)
+
+	Cmd.PersistentFlags().StringVar(
+		&awgConfigFile,
+		"config",
+		"",
+		"custom AmneziaWG JSON configuration",
+	)
+
+	Cmd.PersistentFlags().StringVar(
+		&endpoint,
+		"endpoint",
+		"",
+		"override WireGuard endpoint, e.g. 8.39.214.6:3476",
+	)
+
+	Cmd.PersistentFlags().IntVar(
+		&mtu,
+		"mtu",
+		1420,
+		"interface MTU",
+	)
 }
 
 func generateProfile(version wireguard.AmneziaVersion) error {
@@ -53,19 +90,26 @@ func generateProfile(version wireguard.AmneziaVersion) error {
 	}
 
 	ctx := CreateContext()
+
 	thisDevice, err := cloudflare.GetSourceDevice(ctx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	var awg *wireguard.AmneziaConfig
+
 	if awgConfigFile != "" {
 		awg, err = wireguard.LoadAmneziaConfig(awgConfigFile)
 		if err != nil {
 			return errors.WithStack(err)
 		}
+
 		if awg.Version != version {
-			return errors.Errorf("AWG config version is %q, but command requested %q", awg.Version, version)
+			return errors.Errorf(
+				"AWG config version is %q, but command requested %q",
+				awg.Version,
+				version,
+			)
 		}
 	} else {
 		awg, err = wireguard.NewRandomAmneziaConfig(version)
@@ -74,22 +118,48 @@ func generateProfile(version wireguard.AmneziaVersion) error {
 		}
 	}
 
+	peerEndpoint := thisDevice.Config.Peers[0].Endpoint.Host
+
+	if endpoint != "" {
+		peerEndpoint = endpoint
+	}
+
 	profile, err := wireguard.NewProfile(&wireguard.ProfileData{
 		PrivateKey: viper.GetString(config.PrivateKey),
 		Address1:   thisDevice.Config.Interface.Addresses.V4,
 		Address2:   thisDevice.Config.Interface.Addresses.V6,
 		PublicKey:  thisDevice.Config.Peers[0].PublicKey,
-		Endpoint:   thisDevice.Config.Peers[0].Endpoint.Host,
+		Endpoint:   peerEndpoint,
+		MTU:        mtu,
 		Amnezia:    awg,
 	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
 	if err := profile.Save(profileFile); err != nil {
 		return errors.WithStack(err)
 	}
 
-	log.Println("Successfully generated AmneziaWG profile:", profileFile)
-	log.Printf("AmneziaWG version: %s", awg.Version)
+	log.Println(
+		"Successfully generated AmneziaWG profile:",
+		profileFile,
+	)
+
+	log.Printf(
+		"AmneziaWG version: %s",
+		awg.Version,
+	)
+
+	log.Printf(
+		"Endpoint: %s",
+		peerEndpoint,
+	)
+
+	log.Printf(
+		"MTU: %d",
+		mtu,
+	)
+
 	return nil
 }
